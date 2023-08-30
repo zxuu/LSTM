@@ -3,8 +3,7 @@ import json
 from torch import nn
 import torch.utils.data as Data
 
-# 自实现lstm(单层)
-
+# 自实现lstm(3层)
 texts, labels = [], []
 unique_text, unique_label = [], []
 for line in open('D:\project\\vscode\RNN_Proj\data\\train_data3.txt','r',encoding='utf-8'):
@@ -65,24 +64,24 @@ class LSTM_Cell(nn.Module):
         self.hidden_size=hidden_sz
 
         #input_gate
-        self.U_i=nn.Parameter(torch.rand(input_sz,hidden_sz))
-        self.V_i = nn.Parameter(torch.rand(hidden_sz,hidden_sz))
-        self.b_i = nn.Parameter(torch.rand(1,hidden_sz))
+        self.U_i=nn.Parameter(torch.randn(input_sz,hidden_sz))
+        self.V_i = nn.Parameter(torch.randn(hidden_sz,hidden_sz))
+        self.b_i = nn.Parameter(torch.randn(1,hidden_sz))
 
         #forget_gate
-        self.U_f = nn.Parameter(torch.rand(input_sz, hidden_sz))
-        self.V_f = nn.Parameter(torch.rand(hidden_sz, hidden_sz))
-        self.b_f = nn.Parameter(torch.rand(1,hidden_sz))
+        self.U_f = nn.Parameter(torch.randn(input_sz, hidden_sz))
+        self.V_f = nn.Parameter(torch.randn(hidden_sz, hidden_sz))
+        self.b_f = nn.Parameter(torch.randn(1,hidden_sz))
     
         #c_t
-        self.U_c = nn.Parameter(torch.rand(input_sz, hidden_sz))
-        self.V_c = nn.Parameter(torch.rand(hidden_sz, hidden_sz))
-        self.b_c = nn.Parameter(torch.rand(1,hidden_sz))
+        self.U_c = nn.Parameter(torch.randn(input_sz, hidden_sz))
+        self.V_c = nn.Parameter(torch.randn(hidden_sz, hidden_sz))
+        self.b_c = nn.Parameter(torch.randn(1,hidden_sz))
     
         #output_gate
-        self.U_o = nn.Parameter(torch.rand(input_sz, hidden_sz))
-        self.V_o = nn.Parameter(torch.rand(hidden_sz, hidden_sz))
-        self.b_o = nn.Parameter(torch.rand(1,hidden_sz))
+        self.U_o = nn.Parameter(torch.randn(input_sz, hidden_sz))
+        self.V_o = nn.Parameter(torch.randn(hidden_sz, hidden_sz))
+        self.b_o = nn.Parameter(torch.randn(1,hidden_sz))
 
     def forward(self, x_t, c_t, h_t):
         i_t = torch.sigmoid(x_t @ self.U_i + h_t @ self.V_i + self.b_i)
@@ -104,21 +103,34 @@ class LSTM(torch.nn.Module):
         self.batch_size = batch_size
         self.input_size = input_size
         self.hidden_size = hidden_size
-        self.rnncell1 = LSTM_Cell(input_sz=self.input_size, hidden_sz=self.hidden_size)
 
-    def forward(self, x_t, c_t, h_t):
-        c_t, h_t = self.rnncell1(x_t, c_t, h_t)
-        return c_t, h_t
+        self.lstm_cell1 = LSTM_Cell(input_sz=self.input_size, hidden_sz=self.hidden_size)
+        self.lstm_cell2 = LSTM_Cell(input_sz=self.input_size, hidden_sz=self.hidden_size)
+        self.lstm_cell3 = LSTM_Cell(input_sz=self.input_size, hidden_sz=self.hidden_size)
+        self.linear1 = nn.Linear(self.hidden_size, self.input_size)
+        self.linear2 = nn.Linear(self.hidden_size, self.input_size)
+        self.softmax = nn.Softmax(dim=1)
+
+    def forward(self, x_t, c0_t, h0_t, c1_t, h1_t, c2_t, h2_t):
+        c0, h0 = self.lstm_cell1(x_t, c0_t, h0_t)
+        h0_out = self.linear1(h0)
+        c1, h1 = self.lstm_cell2(h0_out, c1_t, h1_t)
+        h1_out = self.linear2(h1)
+        c2, h2 = self.lstm_cell3(h1_out, c2_t, h2_t)
+        return c0,h0,c1,h1,c2,h2
 
     def init_hidden(self):
-        return torch.zeros(self.batch_size, self.hidden_size),torch.zeros(self.batch_size, self.hidden_size)
+        return torch.zeros(self.batch_size, self.hidden_size),torch.zeros(self.batch_size, self.hidden_size),\
+                torch.zeros(self.batch_size, self.hidden_size),torch.zeros(self.batch_size, self.hidden_size),\
+                torch.zeros(self.batch_size, self.hidden_size),torch.zeros(self.batch_size, self.hidden_size)
     
 
 net = LSTM(input_size=in_dim, hidden_size=hidden_dim, batch_size=batch_size)
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(net.parameters(), lr=0.1)
 
-for i in range(epoch):
+for i in range(50):
+    print('epoch:', i)
     net.train()
     right = []    # 记录全部句子的准确率
     loss_epoch = 0
@@ -130,17 +142,14 @@ for i in range(epoch):
         # texts_embedding = zero_mat[torch.tensor(texts_idd)]
         labels_y = torch.tensor(labels_idd).view(-1, 1)    # [seq_len, 1]
         loss = 0
-        c_t, h_t = net.init_hidden()
+        c0,h0,c1,h1,c2,h2 = net.init_hidden()
         is_right = [0]    # 记录一个句子的准确度
         for input, label in zip(texts_embedding, labels_y):  #一句话中的每个词 inputs：seg_len * batch_size * input_size；labels：[seg_len]
-            # input.cuda()
-            # hidden.cuda()
-            # label.cuda()
             input = input.unsqueeze(0)
             optimizer.zero_grad()
-            c_t, h_t = net.forward(x_t=input, c_t=c_t, h_t=h_t)
-            loss = loss + criterion(h_t, label)  # 要把每个字母的loss累加    =([1,4], [1])
-            _, idx = h_t.max(dim=1)
+            c0,h0,c1,h1,c2,h2 = net.forward(x_t=input,c0_t=c0,h0_t=h0,c1_t=c1,h1_t=h1,c2_t=c2,h2_t=h2)
+            loss = loss + criterion(h2, label)  # 要把每个字母的loss累加
+            _, idx = h2.max(dim=1)
             # 记录预测是否正确
             # if label.item()!=26:
             is_right.extend([1 if label.item()==idx.item() else 0])

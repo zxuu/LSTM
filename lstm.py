@@ -1,3 +1,4 @@
+# 网上的代码，用于理解LSTM结构
 import torch
 import torch.nn as nn
 class myLstm(nn.Module):
