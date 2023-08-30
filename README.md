@@ -9,6 +9,7 @@
 ![多层结构](./img/%E5%A4%9A%E5%B1%82.webp)
 [3层RNN](https://github.com/zxuu/RNN/blob/main/3/rnn_cell/NER/RNN_Cell.py)
 ### 在用LSTM做NER任务中数据集长这样(LSTM_NER.py)
+**940条数据，数据不算多**
 ```bash
 {'text': ['俄', '罗', '斯', '天', '然', '气', '工', '业', '股', '份', '公', '司', '（', 'G', 'a', 'z', 'p', 'r', 'o', 'm', '，', '下', '称', '俄', '气', '）', '宣', '布', '于', '4', '月', '2', '7', '日', '停', '止', '对', '波', '兰', '和', '保', '加', '利', '亚', '的', '天', '然', '气', '供', '应', '。'], 'labels': ['B-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'O', 'B-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'O', 'O', 'O', 'B-ORG', 'I-ORG', 'O', 'O', 'O', 'O', 'B-TIM', 'I-TIM', 'I-TIM', 'I-TIM', 'I-TIM', 'O', 'O', 'O', 'B-COU', 'I-COU', 'O', 'B-COU', 'I-COU', 'I-COU', 'I-COU', 'O', 'O', 'O', 'O', 'O', 'O', 'O']}
 {'text': ['据', 'I', 'T', '之', '家', '消', '息', '，', '台', '湾', '经', '济', '日', '报', '报', '道', '，', '业', '界', '人', '士', '称', '，', '苹', '果', '携', '手', '电', '子', '纸', '（', 'e', 'P', 'a', 'p', 'e', 'r', '）', '龙', '头', '企', '业', '元', '太', '开', '发', '新', '款', 'i', 'P', 'h', 'o', 'n', 'e', '。'], 'labels': ['B-TIM', 'I-TIM', 'B-COU', 'I-COU', 'I-ORG', 'B-LOC', 'O', 'O', 'B-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'O', 'O', 'O', 'O', 'B-COU', 'I-COU', 'I-COU', 'O', 'B-COU', 'I-COU', 'I-ORG', 'B-COU', 'I-COU', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'B-ORG', 'I-ORG', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O']}
@@ -39,3 +40,30 @@ all_sentence acc:0.6192, loss:121.9417
 epoch: 9
 all_sentence acc:0.6192, loss:121.9417
 ```
+
+```bash
+双向torch.nn.LSTM效果。没有提升
+epoch: 0
+all_sentence acc:0.4625, loss:150.3097
+epoch: 1
+all_sentence acc:0.6192, loss:150.4354
+epoch: 2
+all_sentence acc:0.6192, loss:150.4009
+epoch: 3
+all_sentence acc:0.6192, loss:150.3566
+epoch: 4
+all_sentence acc:0.6192, loss:150.3579
+epoch: 5
+all_sentence acc:0.6192, loss:150.1663
+epoch: 6
+all_sentence acc:0.6192, loss:149.6976
+epoch: 7
+all_sentence acc:0.6192, loss:149.4714
+epoch: 8
+all_sentence acc:0.6192, loss:148.9310
+epoch: 9
+all_sentence acc:0.6192, loss:148.8260
+```
+
+----
+**自实现双向的LSTM下次继续更新**
